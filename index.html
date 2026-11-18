@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>興嘉國小 校園維修回報系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f1; --card:#fff; --ink:#1c2a26; --muted:#5f6f69; --line:#dfe5e0;
+  --pri:#0f6b5c; --pri-d:#0a4f44; --pri-l:#e3f1ed;
+  --rep:#c2620a; --rep-l:#fdf0e1; --cln:#0b74b0; --cln-l:#e2f1fa;
+  --red:#c62828; --red-l:#fde8e8; --yel:#a86b00; --yel-l:#fff4d6; --grn:#1d7a3a; --grn-l:#e3f4e8;
+  --pur:#6b3fa0; --pur-l:#f0e8fa;
+  --r:14px; --nav:66px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;font-size:16px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--pri);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.top .logo{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:20px;flex:none}
+.top h1{white-space:nowrap;margin:0;font-size:16px;font-weight:900;line-height:1.25;letter-spacing:.02em}
+.top h1 small{display:block;font-size:12px;font-weight:500;opacity:.85;letter-spacing:0}
+.top .who{margin-left:auto;font-size:12px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:99px;white-space:nowrap;max-width:40%;overflow:hidden;text-overflow:ellipsis}
+
+main{max-width:720px;margin:0 auto;padding:14px 14px calc(var(--nav) + 28px + env(safe-area-inset-bottom))}
+.view h2{font-size:20px;margin:6px 2px 12px;font-weight:900}
+.view h2 .sub{display:block;font-size:13px;color:var(--muted);font-weight:500;margin-top:2px}
+
+.card{background:var(--card);border-radius:var(--r);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05);border:1px solid var(--line);margin-bottom:12px}
+.banner{border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.banner.warn{background:var(--yel-l);color:#6b4500}
+.banner.err{background:var(--red-l);color:var(--red)}
+.banner.info{background:var(--pri-l);color:var(--pri-d)}
+
+/* form */
+.field{margin-bottom:16px}
+.field>label,.flabel{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+.req{color:var(--red);font-weight:900;margin-left:2px}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input[type=text],input[type=password],input[type=date],input[type=time],input[type=number],input[type=search],select,textarea{
+  width:100%;min-height:50px;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 22px,calc(100% - 14px) 22px;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+textarea{min-height:110px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(15,107,92,.15)}
+.invalid{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(198,40,40,.12)!important}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+
+.toggle{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;user-select:none}
+.toggle .sw{width:50px;height:30px;border-radius:99px;background:#cfd8d3;position:relative;flex:none;transition:background .2s}
+.toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.toggle.on{border-color:var(--red);background:var(--red-l)}
+.toggle.on .sw{background:var(--red)}
+.toggle.on .sw::after{left:23px}
+.toggle b{display:block}
+.toggle span.t{font-size:13px;color:var(--muted)}
+
+.photobtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:50px;padding:10px 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:700;cursor:pointer;font-size:15px;text-decoration:none;color:var(--ink)}
+.btn:active{transform:scale(.98)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:disabled{opacity:.6}
+.btn.danger{color:var(--red);border-color:#f1c4c4}
+.btn.ok{background:var(--grn);border-color:var(--grn);color:#fff}
+.btn.warn{background:#fff;border-color:var(--red);color:var(--red)}
+.btn.block{width:100%}
+.btn.big{min-height:58px;font-size:18px}
+.btn.sm{min-height:40px;padding:6px 12px;font-size:14px}
+.preview{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#000;position:relative}
+.preview img{display:block;width:100%;max-height:360px;object-fit:contain}
+.preview .bar{display:flex;gap:8px;padding:8px;background:#fff}
+.preview .bar .btn{flex:1}
+
+/* done */
+.done-card{text-align:center;padding:28px 18px}
+.done-card .check{width:76px;height:76px;border-radius:50%;background:var(--grn);color:#fff;display:grid;place-items:center;margin:0 auto 12px;font-size:42px;font-weight:900}
+.done-card .caseno{font-size:28px;font-weight:900;letter-spacing:.04em;color:var(--pri-d);background:var(--pri-l);border-radius:12px;padding:10px;margin:12px 0;user-select:all;word-break:break-all}
+.kv{display:grid;grid-template-columns:5.5em 1fr;gap:6px 10px;text-align:left;font-size:15px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;word-break:break-word;white-space:pre-wrap}
+
+/* lists */
+.toolbar{position:sticky;top:calc(62px + env(safe-area-inset-top));z-index:10;background:var(--bg);padding:4px 0 8px;margin:0 -2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:38px}
+.chip[aria-pressed=true]{background:var(--pri);border-color:var(--pri);color:#fff}
+.chip .n{display:inline-block;min-width:1.4em;margin-left:4px;padding:0 6px;border-radius:99px;background:rgba(0,0,0,.08);font-size:12px}
+.chip[aria-pressed=true] .n{background:rgba(255,255,255,.25)}
+.chip.alert .n{background:var(--red);color:#fff}
+
+.ccard{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;position:relative;border-left:5px solid var(--line)}
+.ccard.t-repair{border-left-color:var(--rep)}
+.ccard.t-clean{border-left-color:var(--cln)}
+.ccard:active{background:#fafcfb}
+.ccard .l1{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.ccard .no{font-weight:900;font-size:14px;letter-spacing:.02em;color:var(--muted)}
+.ccard .loc{font-weight:700;font-size:16px;margin-bottom:2px}
+.ccard .desc{color:var(--muted);font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ccard .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.ccard .reply{margin-top:8px;background:var(--pri-l);color:var(--pri-d);border-radius:10px;padding:8px 10px;font-size:14px}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.b-repair{background:var(--rep-l);color:var(--rep)}
+.b-clean{background:var(--cln-l);color:var(--cln)}
+.b-urgent{background:var(--red);color:#fff}
+.b-pending{background:var(--yel-l);color:var(--yel)}
+.b-progress{background:var(--cln-l);color:var(--cln)}
+.b-done{background:var(--grn-l);color:var(--grn)}
+.b-returned{background:var(--pur-l);color:var(--pur)}
+.b-overdue{background:var(--red-l);color:var(--red)}
+.b-await{background:#eef0ee;color:#4d5a55}
+.b-approved{background:var(--grn);color:#fff}
+.empty{text-align:center;color:var(--muted);padding:36px 12px}
+.empty .ic{font-size:40px;display:block;margin-bottom:6px}
+
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}
+@media(min-width:560px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer;text-align:left}
+.tile .v{font-size:30px;font-weight:900;line-height:1.1}
+.tile .k{font-size:13px;color:var(--muted);font-weight:700}
+.tile.red .v{color:var(--red)} .tile.yel .v{color:var(--yel)} .tile.pur .v{color:var(--pur)} .tile.grn .v{color:var(--grn)}
+
+/* bottom nav */
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.bnav a{flex:1;max-width:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:var(--nav);text-decoration:none;color:var(--muted);font-size:12px;font-weight:700;position:relative}
+.bnav a .ic{font-size:22px;line-height:1}
+.bnav a.on{color:var(--pri)}
+.bnav a.on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:var(--pri)}
+.bnav a .dot{position:absolute;top:8px;left:calc(50% + 8px);background:var(--red);color:#fff;font-size:11px;border-radius:99px;padding:0 6px;min-width:18px;text-align:center;line-height:18px}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(10,30,25,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet-card{background:var(--bg);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:0 14px calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+@media(min-width:760px){.sheet{align-items:center}.sheet-card{border-radius:20px;max-height:88vh}}
+.sheet-head{position:sticky;top:0;background:var(--bg);padding:12px 2px 10px;display:flex;align-items:center;gap:8px;z-index:2;border-bottom:1px solid var(--line);margin-bottom:12px}
+.sheet-head .no{font-weight:900;font-size:18px;letter-spacing:.02em}
+.sheet-head .x{margin-left:auto;width:44px;height:44px;border-radius:50%;border:none;background:#fff;font-size:22px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.photo-full{width:100%;border-radius:12px;display:block;margin-top:6px;background:#000;max-height:420px;object-fit:contain}
+.tl{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:0 0 14px 12px;font-size:14px}
+.tl li::before{content:"";position:absolute;left:-25px;top:5px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--pri)}
+.tl li.audit::before{border-color:var(--pur)}
+.tl li.reply::before{border-color:var(--cln)}
+.tl li.done::before{border-color:var(--grn);background:var(--grn)}
+.tl .when{font-size:12px;color:var(--muted)}
+.tl .note{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:4px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{min-height:48px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-weight:700;cursor:pointer}
+.seg button[aria-pressed=true][data-s=pending]{background:var(--yel-l);border-color:var(--yel);color:var(--yel)}
+.seg button[aria-pressed=true][data-s=progress]{background:var(--cln-l);border-color:var(--cln);color:var(--cln)}
+.seg button[aria-pressed=true][data-s=done]{background:var(--grn-l);border-color:var(--grn);color:var(--grn)}
+.section-t{font-size:15px;font-weight:900;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--nav) + 18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#1c2a26;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;font-size:15px;opacity:0;pointer-events:none;transition:all .25s;z-index:80;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.people{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.person{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.person img{width:32px;height:32px;border-radius:50%}
+.person .nm{flex:1;font-weight:700}
+.hits{border:1px solid var(--line);border-radius:12px;background:#fff;margin-top:6px;overflow:hidden}
+.hits button{display:flex;align-items:center;gap:10px;width:100%;border:none;background:#fff;padding:10px 12px;cursor:pointer;text-align:left;border-bottom:1px solid var(--line)}
+.hits button:last-child{border-bottom:none}
+.hits img{width:28px;height:28px;border-radius:50%}
+.loading{color:var(--muted);text-align:center;padding:24px}
+
+.top .out{flex:none;white-space:nowrap;border:none;background:rgba(255,255,255,.2);color:#fff;border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
+details.exp{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px}
+details.exp summary{padding:14px 16px;font-weight:900;cursor:pointer;list-style:none}
+details.exp summary::-webkit-details-marker{display:none}
+details.exp .in{padding:0 16px 16px}
+.dl-links{display:grid;gap:10px;margin-top:12px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo" aria-hidden="true">🛠️</div>
+  <h1>校園維修回報系統<small>嘉義市興嘉國民小學</small></h1>
+  <span class="who" id="who">教職員</span>
+  <button class="out hidden" id="btnOut">登出</button>
+</header>
+
+<main>
+  <div id="sysBanner"></div>
+
+  <!-- 填報 -->
+  <section class="view" id="v-report">
+    <h2>現場回報<span class="sub">發現設備故障或損壞，馬上回報，行政立即支援。</span></h2>
+    <form id="fReport" novalidate>
+      <div class="card">
+        <div class="field">
+          <label for="fName">填報人姓名<span class="req">*</span></label>
+          <input type="text" id="fName" autocomplete="name" placeholder="例：王小明" maxlength="30">
+          <div class="hint">方便行政人員後續聯繫。</div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="fDate">發現日期<span class="req">*</span></label><input type="date" id="fDate"></div>
+          <div class="field"><label for="fTime">發現時間<span class="req">*</span></label><input type="time" id="fTime"></div>
+        </div>
+        <div class="field"><label for="fArea">校園區域<span class="req">*</span></label><select id="fArea"></select></div>
+        <div class="field"><label for="fLoc">詳細地點<span class="req">*</span></label>
+          <input type="text" id="fLoc" placeholder="例：二樓 3年2班 教室後門" maxlength="80"></div>
+        <div class="field" style="margin-bottom:0"><label for="fDesc">狀況說明<span class="req">*</span></label>
+          <textarea id="fDesc" maxlength="1000" placeholder="例：後門門把鬆脫，無法關門；投影機無法開機。"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="toggle" id="fUrgent" role="switch" aria-checked="false" tabindex="0">
+          <div class="sw"></div>
+          <div><b>🚨 標記為急件</b><span class="t">影響安全或教學，需要優先處理</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <span class="flabel">現場照片（選填，一張）</span>
+        <div class="photobtns" id="photoBtns">
+          <label class="btn" for="fCam">📷 直接拍照</label>
+          <label class="btn" for="fLib">🖼️ 從相簿選擇</label>
+        </div>
+        <input type="file" id="fCam" accept="image/*" capture="environment" class="hidden">
+        <input type="file" id="fLib" accept="image/*" class="hidden">
+        <div class="preview hidden" id="pv">
+          <img id="pvImg" alt="照片預覽">
+          <div class="bar">
+            <label class="btn sm" for="fLib">🔄 更換照片</label>
+            <button type="button" class="btn sm danger" id="pvDel">🗑️ 移除</button>
+          </div>
+        </div>
+      </div>
+      <div id="formErr" class="banner err hidden"></div>
+      <button type="submit" class="btn pri block big" id="btnSubmit">送出回報</button>
+    </form>
+  </section>
+
+  <!-- 送出結果 -->
+  <section class="view hidden" id="v-done">
+    <div class="card done-card">
+      <div class="check">✓</div>
+      <div style="font-size:20px;font-weight:900">回報已送出！</div>
+      <div style="color:var(--muted);font-size:14px">案件已進入維修收件匣，請記下案件編號</div>
+      <div class="caseno" id="doneNo"></div>
+      <dl class="kv" id="doneKv"></dl>
+    </div>
+    <div style="display:grid;gap:10px">
+      <a class="btn pri block big" href="#mine">查看我的回報進度</a>
+      <button class="btn block big" id="btnAgain">再填一筆</button>
+    </div>
+  </section>
+
+  <section class="view hidden" id="v-mine">
+    <h2>我的回報<span class="sub">在這支手機／電腦送出的案件，可追蹤進度與回覆。</span></h2>
+    <div id="mineList"><div class="loading">載入中…</div></div>
+  </section>
+
+  <section class="view hidden" id="v-progress">
+    <h2>處理進度查詢<span class="sub">查閱全校維修案件的處理狀態與結果。</span></h2>
+    <div class="toolbar">
+      <input type="search" id="pgQ" placeholder="🔍 搜尋地點、案件編號、填報人">
+      <div class="chips" id="pgChips"></div>
+    </div>
+    <div id="pgList"><div class="loading">載入中…</div></div>
+  </section>
+
+  <section class="view hidden" id="v-staff">
+    <h2>行政登入<span class="sub">維修業務單位、校長、系統管理者請由此登入。</span></h2>
+    <div id="staffBody"></div>
+  </section>
+
+  <section class="view hidden" id="v-inbox">
+    <h2>維修收件匣<span class="sub">分派負責人、更新處理狀態、回覆填報人。</span></h2>
+    <div id="ibExport"></div>
+    <div class="toolbar">
+      <input type="search" id="ibQ" placeholder="🔍 搜尋地點、案件編號、填報人姓名">
+      <div class="chips" id="ibChips"></div>
+    </div>
+    <div id="ibList"><div class="loading">載入中…</div></div>
+  </section>
+
+  <section class="view hidden" id="v-audit">
+    <h2>校長稽核<span class="sub">檢視未完成與逾時案件，核可處理結果或退回補正。</span></h2>
+    <div class="tiles" id="auTiles"></div>
+    <div id="auExport"></div>
+    <div class="toolbar">
+      <input type="search" id="auQ" placeholder="🔍 搜尋地點、案件編號、填報人">
+      <div class="chips" id="auChips"></div>
+    </div>
+    <div id="auList"></div>
+  </section>
+
+  <section class="view hidden" id="v-settings">
+    <h2>系統管理<span class="sub">設定登入密碼、區域選項與逾時標準。</span></h2>
+    <div id="setBody"><div class="loading">載入中…</div></div>
+  </section>
+</main>
+
+<nav class="bnav" id="bnav" aria-label="主選單"></nav>
+
+<div class="sheet hidden" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-card" id="sheetCard">
+    <div class="sheet-head"><span class="no" id="shNo"></span><button class="x" id="shClose" aria-label="關閉">×</button></div>
+    <div id="dInfo"></div>
+    <div id="dActions"></div>
+  </div>
+</div>
+<div class="sheet hidden" id="dlBox" role="dialog" aria-modal="true">
+  <div class="sheet-card">
+    <div class="sheet-head"><span class="no">📄 PDF 已產生</span><button class="x" id="dlClose" aria-label="關閉">×</button></div>
+    <div class="card"><div id="dlName" style="font-weight:700;word-break:break-all"></div>
+      <div class="hint">檔案同時存放在雲端硬碟「興嘉維修紀錄PDF」資料夾。</div>
+      <div class="dl-links"><a class="btn pri block big" id="dlLink">⬇️ 下載 PDF</a>
+        <a class="btn block big" id="dlDrive" target="_blank" rel="noopener">☁️ 在雲端硬碟開啟</a></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TZ = "Asia/Taipei";
+const STATUS = {pending:"待處理", progress:"處理中", done:"已完成"};
+const ROLE = {unit:"維修業務單位", principal:"校長", admin:"系統管理者"};
+
+const S = {
+  cases:[], settings:{areas:[],assignees:[],urgentHours:24,normalHours:72}, adminSet:true,
+  token:null, role:null, name:"", loaded:false,
+  urgent:false, photo:null, photoUrl:null, submitting:false,
+  openId:null, detail:null,
+  f:{pg:"all", ib:"open", au:"open"}
+};
+const isUnit = () => S.role==="unit" || S.role==="admin";
+const isPrin = () => S.role==="principal" || S.role==="admin";
+const isAdmin = () => S.role==="admin";
+
+/* ---------- 後端呼叫 ---------- */
+// ▼ 部署 Apps Script 後，把網頁應用程式網址貼在這裡
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxN6vlZ-XlEUZd0ogLu2laaVxrsgYfY9lSxkBjA_xIB1_ihawUIorU2TlOeTegDeXYx/exec";
+async function api(fn, ...args){
+  let res;
+  try{
+    res = await fetch(GAS_URL, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({fn, args}), redirect:"follow"});
+  }catch(e){ throw new Error("無法連線到伺服器，請檢查網路後再試"); }
+  let j; try{ j = await res.json(); }catch(e){ throw new Error("伺服器回應異常，請確認 Apps Script 已部署為「所有人」可存取"); }
+  if(!j.ok) throw new Error(j.error || "發生錯誤");
+  return j.data;
+}
+const em = e => String((e && e.message) || e || "發生錯誤").replace(/^Error:\s*/,"").replace(/^Exception:\s*/,"");
+function authFail(e){
+  if(/登入已逾時|請先登入/.test(em(e))){ doLogout(true); toast("登入已逾時，請重新登入", true); return true; }
+  return false;
+}
+
+/* ---------- 工具 ---------- */
+function twNow(){
+  const p = new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date());
+  const g = t => p.find(x=>x.type===t).value;
+  return {date:`${g("year")}-${g("month")}-${g("day")}`, time:`${g("hour")}:${g("minute")}`, ym:`${g("year")}-${g("month")}`};
+}
+function fmt(ms, y){
+  if(!ms) return "";
+  const o={timeZone:TZ,month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}; if(y) o.year="numeric";
+  return new Intl.DateTimeFormat("zh-TW",o).format(new Date(ms));
+}
+function ago(ms){ const m=Math.max(0,Math.round((Date.now()-ms)/60000)); if(m<60) return `${m} 分鐘前`; const h=Math.round(m/60); if(h<48) return `${h} 小時前`; return `${Math.round(h/24)} 天前`; }
+function dur(ms){ const h=ms/3600000; if(h<1) return `${Math.max(1,Math.round(ms/60000))} 分鐘`; if(h<48) return `${Math.round(h)} 小時`; return `${(h/24).toFixed(1)} 天`; }
+let toastT;
+function toast(msg, err){ const t=$("#toast"); t.textContent=msg; t.className="toast show"+(err?" err":""); clearTimeout(toastT); toastT=setTimeout(()=>t.className="toast",3000); }
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+const mine = () => lsGet("rp_mine2", []);
+const mineKey = id => (mine().find(m=>m.id===id)||{}).key || "";
+const uH = () => Number(S.settings.urgentHours)||24, nH = () => Number(S.settings.normalHours)||72;
+function busy(btn, t){ btn.disabled=true; btn.dataset.t=btn.dataset.t||btn.textContent; btn.innerHTML=`<span class="spinner"></span> ${t}`; }
+function idle(btn){ btn.disabled=false; btn.textContent=btn.dataset.t||btn.textContent; }
+
+/* ---------- 案件狀態 ---------- */
+function stOf(c){
+  const done=c.status==="done", returned=c.audit==="returned" && !done;
+  const age=Date.now()-c.createdAt, limit=(c.urgent?uH():nH())*3600000;
+  return {done, returned, open:!done, overdue:!done && age>limit, age,
+    awaiting: done && !c.audit, approved: done && c.audit==="approved"};
+}
+function matchQ(c,q){ q=(q||"").trim().toLowerCase(); if(!q) return true;
+  return [c.id,c.location,c.area,c.reporterName,c.desc,c.assignee].some(v=>String(v||"").toLowerCase().includes(q)); }
+function badges(c, st){
+  let s = st.returned ? `<span class="badge b-returned">↩ 退回補正</span>` : `<span class="badge b-${c.status}">${STATUS[c.status]}</span>`;
+  if(st.overdue) s+=`<span class="badge b-overdue">⏰ 逾時</span>`;
+  if(st.approved) s+=`<span class="badge b-approved">✔ 校長已核可</span>`;
+  else if(st.awaiting) s+=`<span class="badge b-await">待校長核可</span>`;
+  return s;
+}
+function card(c){
+  const st=stOf(c);
+  return `<button class="ccard t-repair" data-open="${esc(c.id)}">
+    <div class="l1"><span class="no">${esc(c.id)}</span>${c.urgent?`<span class="badge b-urgent">🚨 急件</span>`:""}${badges(c,st)}</div>
+    <div class="loc">${esc(c.area)}｜${esc(c.location)}</div>
+    <div class="desc">${esc(c.desc)}</div>
+    <div class="meta"><span>👤 ${esc(c.reporterName)}</span><span>🕒 ${esc(fmt(c.createdAt))}（${ago(c.createdAt)}）</span>${c.assignee?`<span>🧰 ${esc(c.assignee)}</span>`:""}${c.hasPhoto?"<span>📷</span>":""}</div>
+    ${st.done && c.result ? `<div class="reply">✅ 處理結果：${esc(c.result)}</div>` : (c.lastReply?`<div class="reply">💬 回覆：${esc(c.lastReply)}</div>`:"")}
+  </button>`;
+}
+const emptyBox = (ic,t) => `<div class="empty"><span class="ic">${ic}</span>${esc(t)}</div>`;
+function chips(el, defs, cur, pick){
+  el.innerHTML = defs.map(d=>`<button class="chip${d.alert&&d.n?" alert":""}" data-k="${d.k}" aria-pressed="${d.k===cur}">${esc(d.t)}${d.n!=null?`<span class="n">${d.n}</span>`:""}</button>`).join("");
+  el.onclick = e => { const b=e.target.closest(".chip"); if(b) pick(b.dataset.k); };
+}
+
+/* ---------- 導覽 ---------- */
+const ROUTES=["report","done","mine","progress","staff","inbox","audit","settings"];
+function navItems(){
+  const it=[{k:"report",ic:"📝",t:"填報"},{k:"mine",ic:"📋",t:"我的回報"},{k:"progress",ic:"🔎",t:"進度查詢"}];
+  if(!S.role) it.push({k:"staff",ic:"🔐",t:"行政登入"});
+  if(isUnit()) it.push({k:"inbox",ic:"📥",t:"收件匣"});
+  if(isPrin()) it.push({k:"audit",ic:"🏫",t:"校長稽核"});
+  if(isAdmin()) it.push({k:"settings",ic:"⚙️",t:"管理"});
+  return it;
+}
+function cur(){
+  let h=location.hash.slice(1); if(!ROUTES.includes(h)) h="report";
+  if((h==="inbox"&&!isUnit())||(h==="audit"&&!isPrin())||(h==="settings"&&!isAdmin())) h=S.role?homeOf():"staff";
+  if(h==="staff"&&S.role) h=homeOf();
+  return h;
+}
+const homeOf = () => isUnit()?"inbox":isPrin()?"audit":"report";
+function renderNav(){
+  const c=cur()==="done"?"report":cur();
+  const pend=S.cases.filter(x=>x.status==="pending"||stOf(x).returned).length;
+  const au=S.cases.filter(x=>{const s=stOf(x);return s.awaiting||s.overdue;}).length;
+  $("#bnav").innerHTML = navItems().map(i=>{
+    let n = i.k==="inbox"?pend : i.k==="audit"?au : 0;
+    return `<a href="#${i.k}" class="${i.k===c?"on":""}"><span class="ic">${i.ic}</span>${i.t}${n?`<span class="dot">${n>99?"99+":n}</span>`:""}</a>`;
+  }).join("");
+  $("#who").textContent = S.role ? `${S.name}・${{unit:"維修",principal:"校長",admin:"管理者"}[S.role]}` : "教職員";
+  $("#btnOut").classList.toggle("hidden", !S.role);
+}
+let lastRoute=null;
+function show(){
+  const r=cur();
+  if(location.hash.slice(1)!==r && location.hash) history.replaceState(null,"","#"+r);
+  ROUTES.forEach(k=>$("#v-"+k).classList.toggle("hidden",k!==r));
+  renderNav(); renderView(true);
+  if(lastRoute!==r) window.scrollTo(0,0);
+  lastRoute=r;
+}
+window.addEventListener("hashchange", show);
+function renderView(full){
+  const r=cur();
+  if(r==="mine") renderMine();
+  else if(r==="progress") renderProgress();
+  else if(r==="staff") renderStaff();
+  else if(r==="inbox") renderInbox();
+  else if(r==="audit") renderAudit();
+  else if(r==="settings" && full) renderSettings();
+}
+function rerender(){ renderNav(); renderView(false); }
+
+/* ---------- 資料同步 ---------- */
+let refreshing=false;
+async function refresh(){
+  if(refreshing) return; refreshing=true;
+  try{
+    const d=await api("apiList");
+    S.cases=d.cases||[]; S.settings=d.settings||S.settings; S.adminSet=!!d.adminSet; S.loaded=true;
+    fillAreas(); banner(""); rerender();
+  }catch(e){ banner("資料讀取失敗："+esc(em(e)),"err"); }
+  finally{ refreshing=false; }
+}
+setInterval(()=>{ if(document.visibilityState==="visible" && !S.submitting) refresh(); }, 30000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") refresh(); });
+function upsert(c){ const i=S.cases.findIndex(x=>x.id===c.id); if(i>=0) S.cases[i]={...S.cases[i],...c}; else S.cases.unshift(c); }
+function banner(h,k){ $("#sysBanner").innerHTML=h?`<div class="banner ${k||"warn"}">${h}</div>`:""; }
+
+/* ---------- 填報 ---------- */
+function fillAreas(){
+  const sel=$("#fArea"), v=sel.value;
+  sel.innerHTML=`<option value="">請選擇區域</option>`+(S.settings.areas||[]).map(a=>`<option>${esc(a)}</option>`).join("");
+  if(v) sel.value=v;
+}
+function resetForm(){
+  const n=twNow(); $("#fDate").value=n.date; $("#fTime").value=n.time;
+  $("#fArea").value=""; $("#fLoc").value=""; $("#fDesc").value="";
+  setUrgent(false); clearPhoto(); $("#formErr").classList.add("hidden");
+  document.querySelectorAll(".invalid").forEach(x=>x.classList.remove("invalid"));
+  if(!$("#fName").value) $("#fName").value=lsGet("rp_name","");
+}
+function setUrgent(v){ S.urgent=v; const el=$("#fUrgent"); el.classList.toggle("on",v); el.setAttribute("aria-checked",v); }
+$("#fUrgent").onclick=()=>setUrgent(!S.urgent);
+$("#fUrgent").onkeydown=e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); setUrgent(!S.urgent);} };
+function clearPhoto(){
+  if(S.photoUrl) URL.revokeObjectURL(S.photoUrl);
+  S.photo=null; S.photoUrl=null;
+  $("#pv").classList.add("hidden"); $("#photoBtns").classList.remove("hidden"); $("#fCam").value=""; $("#fLib").value="";
+}
+function loadImg(f){ return new Promise((res,rej)=>{ const u=URL.createObjectURL(f), i=new Image(); i.onload=()=>res(i); i.onerror=()=>{URL.revokeObjectURL(u);rej();}; i.src=u; }); }
+async function compress(f,max,q){
+  const img=await loadImg(f); let w=img.naturalWidth,h=img.naturalHeight; const s=Math.min(1,max/Math.max(w,h));
+  w=Math.round(w*s); h=Math.round(h*s);
+  const cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h);
+  URL.revokeObjectURL(img.src);
+  return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(),"image/jpeg",q));
+}
+const toDataURL = b => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); });
+async function onPick(e){
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  try{
+    const b=await compress(f,1400,.8);
+    if(S.photoUrl) URL.revokeObjectURL(S.photoUrl);
+    S.photo=b; S.photoUrl=URL.createObjectURL(b);
+    $("#pvImg").src=S.photoUrl; $("#pv").classList.remove("hidden"); $("#photoBtns").classList.add("hidden");
+  }catch(err){ toast("無法讀取這張照片，請改用其他照片",true); }
+  e.target.value="";
+}
+$("#fCam").onchange=onPick; $("#fLib").onchange=onPick; $("#pvDel").onclick=clearPhoto;
+
+$("#fReport").addEventListener("submit", async e=>{
+  e.preventDefault(); if(S.submitting) return;
+  const v={name:$("#fName").value.trim(),date:$("#fDate").value,time:$("#fTime").value,area:$("#fArea").value,location:$("#fLoc").value.trim(),desc:$("#fDesc").value.trim()};
+  const bad=[], mark=(id,ok,l)=>{ $(id).classList.toggle("invalid",!ok); if(!ok) bad.push(l); };
+  mark("#fName",!!v.name,"填報人姓名"); mark("#fDate",!!v.date,"發現日期"); mark("#fTime",!!v.time,"發現時間");
+  mark("#fArea",!!v.area,"校園區域"); mark("#fLoc",!!v.location,"詳細地點"); mark("#fDesc",!!v.desc,"狀況說明");
+  const fe=$("#formErr");
+  if(bad.length){ fe.textContent="請填寫："+bad.join("、"); fe.classList.remove("hidden"); document.querySelector(".invalid")?.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  fe.classList.add("hidden"); S.submitting=true;
+  const btn=$("#btnSubmit"); busy(btn, S.photo?"上傳照片與資料中…":"送出中…");
+  try{
+    const photo = S.photo ? await toDataURL(S.photo) : null;
+    const r = await api("apiSubmit", {...v, urgent:S.urgent, photo});
+    lsSet("rp_name", v.name);
+    const m=mine(); m.unshift({id:r.id,key:r.key}); lsSet("rp_mine2", m.slice(0,300));
+    $("#doneNo").textContent=r.id;
+    $("#doneKv").innerHTML=[["急件",S.urgent?"🚨 是":"否"],["填報人",v.name],["發現時間",`${v.date} ${v.time}`],["地點",`${v.area}｜${v.location}`],["狀況",v.desc],["照片",photo?"已附上":"未附"]]
+      .map(([k,x])=>`<dt>${k}</dt><dd>${esc(x)}</dd>`).join("");
+    location.hash="#done";
+    refresh();
+  }catch(err){
+    fe.textContent="送出失敗："+em(err)+"（填寫內容仍保留，可再按一次送出）"; fe.classList.remove("hidden"); toast("送出失敗",true);
+  }finally{ S.submitting=false; idle(btn); }
+});
+$("#btnAgain").onclick=()=>{ resetForm(); location.hash="#report"; };
+
+/* ---------- 我的回報／進度 ---------- */
+function renderMine(){
+  const el=$("#mineList"); if(!S.loaded){ el.innerHTML=`<div class="loading">載入中…</div>`; return; }
+  const ids=new Set(mine().map(m=>m.id));
+  const list=S.cases.filter(c=>ids.has(c.id));
+  el.innerHTML = list.length ? list.map(card).join("") : emptyBox("📭","這台裝置還沒有送出任何回報。也可以到「進度查詢」用姓名搜尋。");
+}
+function renderProgress(){
+  const all=S.cases, q=$("#pgQ").value;
+  chips($("#pgChips"),[{k:"all",t:"全部",n:all.length},{k:"open",t:"未完成",n:all.filter(c=>stOf(c).open).length},{k:"done",t:"已完成",n:all.filter(c=>stOf(c).done).length}],S.f.pg,k=>{S.f.pg=k;renderProgress();});
+  const el=$("#pgList"); if(!S.loaded){ el.innerHTML=`<div class="loading">載入中…</div>`; return; }
+  const list=all.filter(c=>{const s=stOf(c); if(S.f.pg==="open"&&!s.open) return false; if(S.f.pg==="done"&&!s.done) return false; return matchQ(c,q);});
+  el.innerHTML = list.length ? list.map(card).join("") : emptyBox("🔍","沒有符合的案件。");
+}
+$("#pgQ").oninput=renderProgress;
+
+/* ---------- 行政登入 ---------- */
+function renderStaff(){
+  const el=$("#staffBody");
+  if(el.dataset.mode === (S.adminSet?"login":"setup")) return;
+  el.dataset.mode = S.adminSet?"login":"setup";
+  if(!S.adminSet){
+    el.innerHTML=`<div class="card"><div class="banner info">系統初次使用，請先設定「系統管理者」密碼。設定後，再到「管理」頁設定維修業務單位與校長的密碼。</div>
+      <div class="field"><label for="suP1">管理者密碼（至少 6 字元）</label><input type="password" id="suP1" autocomplete="new-password"></div>
+      <div class="field"><label for="suP2">再輸入一次</label><input type="password" id="suP2" autocomplete="new-password"></div>
+      <div class="banner err hidden" id="suErr"></div><button class="btn pri block big" id="suGo">設定管理者密碼</button></div>`;
+    $("#suGo").onclick=async e=>{
+      const p1=$("#suP1").value, p2=$("#suP2").value, er=$("#suErr"); er.classList.add("hidden");
+      if(p1.length<6||p1!==p2){ er.textContent=p1.length<6?"密碼至少 6 個字元":"兩次輸入的密碼不一致"; er.classList.remove("hidden"); return; }
+      busy(e.currentTarget,"設定中…");
+      try{ await api("apiSetupAdmin",p1); S.adminSet=true; toast("管理者密碼已設定，請登入"); el.dataset.mode=""; renderStaff(); }
+      catch(x){ er.textContent=em(x); er.classList.remove("hidden"); idle(e.currentTarget); }
+    };
+    return;
+  }
+  el.innerHTML=`<form class="card" id="lgForm">
+    <div class="field"><label for="lgRole">登入身分</label><select id="lgRole"><option value="unit">維修業務單位</option><option value="principal">校長</option><option value="admin">系統管理者</option></select></div>
+    <div class="field"><label for="lgName">您的姓名</label><input type="text" id="lgName" maxlength="30" placeholder="處理紀錄會顯示此姓名" value="${esc(lsGet("rp_staffname",""))}"></div>
+    <div class="field"><label for="lgPw">密碼</label><input type="password" id="lgPw" autocomplete="current-password"></div>
+    <div class="banner err hidden" id="lgErr"></div>
+    <button class="btn pri block big" id="lgGo" type="submit">登入</button>
+    <div class="hint" style="margin-top:10px">密碼由系統管理者設定，如需取得請洽教務處。</div></form>`;
+  $("#lgRole").value=lsGet("rp_role","unit");
+  $("#lgForm").onsubmit=async e=>{
+    e.preventDefault();
+    const role=$("#lgRole").value, name=$("#lgName").value.trim(), pw=$("#lgPw").value, er=$("#lgErr"), btn=$("#lgGo");
+    er.classList.add("hidden");
+    if(!name||!pw){ er.textContent="請輸入姓名與密碼"; er.classList.remove("hidden"); return; }
+    busy(btn,"登入中…");
+    try{
+      const s=await api("apiLogin",role,name,pw);
+      S.token=s.token; S.role=s.role; S.name=s.name;
+      lsSet("rp_tok",s.token); lsSet("rp_staffname",name); lsSet("rp_role",role);
+      toast(`歡迎，${s.name}`); location.hash="#"+homeOf(); show();
+    }catch(x){ er.textContent=em(x); er.classList.remove("hidden"); }
+    finally{ idle(btn); }
+  };
+}
+function doLogout(silent){
+  if(S.token && !silent) api("apiLogout",S.token).catch(()=>{});
+  S.token=null; S.role=null; S.name=""; lsDel("rp_tok"); $("#staffBody").dataset.mode="";
+  closeDetail(); location.hash="#report"; show();
+}
+$("#btnOut").onclick=()=>{ doLogout(false); toast("已登出"); };
+
+/* ---------- 匯出 ---------- */
+function exportCard(el){
+  if(el.dataset.ok) return; el.dataset.ok="1";
+  const n=twNow();
+  el.innerHTML=`<details class="exp"><summary>📄 匯出維修紀錄 PDF</summary><div class="in">
+    <div class="row2"><div class="field"><label>起日</label><input type="date" class="exFrom" value="${n.ym}-01"></div>
+    <div class="field"><label>迄日</label><input type="date" class="exTo" value="${n.date}"></div></div>
+    <div class="field"><label>範圍</label><select class="exSt"><option value="all">全部案件</option><option value="open">未完成</option><option value="done">已完成</option><option value="overdue">逾時</option></select></div>
+    <button class="btn pri block exGo">產生 PDF</button></div></details>`;
+  el.querySelector(".exGo").onclick=async e=>{
+    const btn=e.currentTarget; busy(btn,"產生中，約需 5–15 秒…");
+    try{ showDl(await api("apiExportList",S.token,{from:el.querySelector(".exFrom").value,to:el.querySelector(".exTo").value,status:el.querySelector(".exSt").value})); }
+    catch(x){ if(!authFail(x)) toast("匯出失敗："+em(x),true); }
+    finally{ idle(btn); }
+  };
+}
+let dlUrl=null;
+function showDl(r){
+  const bin=atob(r.b64), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+  if(dlUrl) URL.revokeObjectURL(dlUrl);
+  dlUrl=URL.createObjectURL(new Blob([u8],{type:"application/pdf"}));
+  $("#dlName").textContent=r.name; const a=$("#dlLink"); a.href=dlUrl; a.download=r.name;
+  $("#dlDrive").href=r.url; $("#dlBox").classList.remove("hidden");
+}
+$("#dlClose").onclick=()=>$("#dlBox").classList.add("hidden");
+$("#dlBox").onclick=e=>{ if(e.target.id==="dlBox") $("#dlBox").classList.add("hidden"); };
+
+/* ---------- 收件匣 ---------- */
+function renderInbox(){
+  exportCard($("#ibExport"));
+  const all=S.cases, q=$("#ibQ").value;
+  const F={ open:c=>stOf(c).open, pending:c=>c.status==="pending", progress:c=>c.status==="progress", returned:c=>stOf(c).returned,
+    overdue:c=>stOf(c).overdue, urgent:c=>c.urgent&&stOf(c).open, done:c=>stOf(c).done, all:()=>true };
+  const n=k=>all.filter(F[k]).length;
+  chips($("#ibChips"),[{k:"open",t:"未完成",n:n("open")},{k:"pending",t:"待處理",n:n("pending"),alert:true},{k:"progress",t:"處理中",n:n("progress")},
+    {k:"returned",t:"退回補正",n:n("returned"),alert:true},{k:"overdue",t:"逾時",n:n("overdue"),alert:true},{k:"urgent",t:"急件",n:n("urgent"),alert:true},
+    {k:"done",t:"已完成",n:n("done")},{k:"all",t:"全部",n:all.length}],S.f.ib,k=>{S.f.ib=k;renderInbox();});
+  const el=$("#ibList"); if(!S.loaded){ el.innerHTML=`<div class="loading">載入中…</div>`; return; }
+  let list=all.filter(F[S.f.ib]).filter(c=>matchQ(c,q));
+  if(!["done","all"].includes(S.f.ib)){
+    const rk=c=>{const s=stOf(c); return (s.returned?0:10)+(c.urgent?0:4)+(s.overdue?0:2)+(c.status==="pending"?0:1);};
+    list=[...list].sort((a,b)=>rk(a)-rk(b)||a.createdAt-b.createdAt);
+  }
+  el.innerHTML = list.length ? list.map(card).join("") : emptyBox("🎉","目前沒有符合的案件。");
+}
+$("#ibQ").oninput=renderInbox;
+
+/* ---------- 校長稽核 ---------- */
+function renderAudit(){
+  exportCard($("#auExport"));
+  const all=S.cases, q=$("#auQ").value;
+  const F={ open:c=>stOf(c).open, overdue:c=>stOf(c).overdue, awaiting:c=>stOf(c).awaiting, returned:c=>stOf(c).returned, approved:c=>stOf(c).approved, all:()=>true };
+  const n=k=>all.filter(F[k]).length;
+  $("#auTiles").innerHTML=[{k:"open",t:"未完成",c:"yel"},{k:"overdue",t:"逾時",c:"red"},{k:"awaiting",t:"待核可",c:"pur"},{k:"approved",t:"已核可",c:"grn"}]
+    .map(t=>`<button class="tile ${t.c}" data-k="${t.k}"><div class="v">${n(t.k)}</div><div class="k">${t.t}</div></button>`).join("");
+  $("#auTiles").onclick=e=>{const b=e.target.closest(".tile"); if(b){S.f.au=b.dataset.k;renderAudit();}};
+  chips($("#auChips"),[{k:"open",t:"未完成",n:n("open")},{k:"overdue",t:"逾時",n:n("overdue"),alert:true},{k:"awaiting",t:"待核可",n:n("awaiting"),alert:true},
+    {k:"returned",t:"已退回",n:n("returned")},{k:"approved",t:"已核可",n:n("approved")},{k:"all",t:"全部",n:all.length}],S.f.au,k=>{S.f.au=k;renderAudit();});
+  const el=$("#auList"); if(!S.loaded){ el.innerHTML=`<div class="loading">載入中…</div>`; return; }
+  const list=all.filter(F[S.f.au]).filter(c=>matchQ(c,q)).sort((a,b)=>["open","overdue"].includes(S.f.au)?a.createdAt-b.createdAt:b.createdAt-a.createdAt);
+  el.innerHTML=`<div class="banner info">逾時標準：急件超過 ${uH()} 小時、一般案件超過 ${nH()} 小時仍未完成。</div>`+(list.length?list.map(card).join(""):emptyBox("✅","目前沒有符合的案件。"));
+}
+$("#auQ").oninput=renderAudit;
+
+/* ---------- 案件詳情 ---------- */
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-open]"); if(b) openDetail(b.dataset.open); });
+$("#shClose").onclick=closeDetail;
+$("#sheet").onclick=e=>{ if(e.target.id==="sheet") closeDetail(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDetail(); $("#dlBox").classList.add("hidden"); } });
+function closeDetail(){ S.openId=null; S.detail=null; $("#sheet").classList.add("hidden"); document.body.style.overflow=""; }
+async function openDetail(id){
+  const c=S.cases.find(x=>x.id===id); if(!c) return;
+  S.openId=id; S.detail=null; $("#shNo").textContent=id;
+  $("#sheet").classList.remove("hidden"); document.body.style.overflow="hidden"; $("#sheetCard").scrollTop=0;
+  drawDetail(); drawActions();
+  await loadDetail(id);
+}
+async function loadDetail(id){
+  try{
+    const d=await api("apiDetail",id,S.token||"",mineKey(id));
+    if(S.openId!==id) return;
+    S.detail=d; upsert(d.c); drawDetail(); drawActions();
+  }catch(e){ if(S.openId===id) toast("讀取案件詳情失敗："+em(e),true); }
+}
+function drawDetail(){
+  const c=S.cases.find(x=>x.id===S.openId); if(!c) return;
+  const st=stOf(c), d=S.detail;
+  let tl=`<div class="loading">處理紀錄載入中…</div>`;
+  if(d){
+    const ev=(d.logs||[]).map(l=>{
+      let cls=""; if(l.act==="回覆") cls="reply"; if(/校長/.test(l.act)) cls="audit"; if(l.status==="已完成") cls="done";
+      const who=l.actor?`${esc(l.role)}・${esc(l.actor)}`:esc(c.reporterName);
+      const note=l.note && l.act!=="指派負責人" ? `<div class="note">${esc(l.note)}</div>` : "";
+      return `<li class="${cls}"><div class="when">${esc(fmt(l.at,true))}</div><b>${who}・${esc(l.act)}</b>${l.act==="指派負責人"?"："+esc(l.note):""}${l.status&&l.act!=="送出回報"?" → "+esc(l.status):""}${note}</li>`;
+    });
+    tl=`<ul class="tl">${ev.join("")}</ul>`;
+  }
+  let ph="";
+  if(c.hasPhoto){
+    if(!d) ph=`<div class="card"><div class="section-t">📷 現場照片</div><div class="loading">照片載入中…</div></div>`;
+    else if(d.photo) ph=`<div class="card"><div class="section-t">📷 現場照片</div><img class="photo-full" alt="現場照片" src="${esc(d.photo)}"></div>`;
+    else ph=`<div class="card" style="color:var(--muted);font-size:14px">📷 此案件附有現場照片（僅填報人、維修單位及校長可檢視）</div>`;
+  }
+  $("#dInfo").innerHTML=`
+    <div class="card">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${c.urgent?`<span class="badge b-urgent">🚨 急件</span>`:""}${badges(c,st)}</div>
+      <div style="font-size:18px;font-weight:900;margin-bottom:10px">${esc(c.area)}｜${esc(c.location)}</div>
+      <dl class="kv">
+        <dt>狀況說明</dt><dd>${esc(c.desc)}</dd><dt>填報人</dt><dd>${esc(c.reporterName)}</dd>
+        <dt>發現時間</dt><dd>${esc(c.date)} ${esc(c.time)}</dd>
+        <dt>送出時間</dt><dd>${esc(fmt(c.createdAt,true))}${st.open?`（已 ${dur(st.age)}）`:""}</dd>
+        <dt>負責人</dt><dd>${esc(c.assignee||"尚未指派")}</dd>
+        ${st.done&&c.doneAt?`<dt>完成時間</dt><dd>${esc(fmt(c.doneAt,true))}（歷時 ${dur(c.doneAt-c.createdAt)}）</dd>`:""}
+      </dl>
+      ${st.done&&c.result?`<div style="margin-top:12px;background:var(--grn-l);color:var(--grn);border-radius:10px;padding:10px 12px;white-space:pre-wrap"><b>✅ 實際處理結果</b><br>${esc(c.result)}</div>`:""}
+      ${st.returned&&c.auditNote?`<div style="margin-top:10px;background:var(--pur-l);color:var(--pur);border-radius:10px;padding:10px 12px;white-space:pre-wrap"><b>↩ 校長退回補正意見</b><br>${esc(c.auditNote)}</div>`:""}
+    </div>${ph}
+    <div class="card"><div class="section-t">🧾 處理紀錄</div>${tl}</div>`;
+}
+function drawActions(){
+  const box=$("#dActions"); box.innerHTML="";
+  const c=S.cases.find(x=>x.id===S.openId); if(!c) return;
+  if(isUnit()) box.appendChild(unitForm(c));
+  if(isPrin()) box.appendChild(auditForm(c));
+  if(S.role){
+    const b=document.createElement("button"); b.className="btn block big"; b.style.marginBottom="12px"; b.textContent="📄 匯出本案 PDF";
+    b.onclick=async()=>{ busy(b,"產生中…"); try{ showDl(await api("apiExportCase",S.token,c.id)); }catch(x){ if(!authFail(x)) toast("匯出失敗："+em(x),true); } finally{ idle(b); } };
+    box.appendChild(b);
+  }
+}
+function afterSave(c){ upsert(c); rerender(); drawDetail(); drawActions(); loadDetail(c.id); }
+function unitForm(c){
+  const st=stOf(c), w=document.createElement("div"); w.className="card";
+  w.innerHTML=`<div class="section-t">🧰 維修處理</div>
+    ${st.returned?`<div class="banner warn">校長已退回此案，請依意見補正後再次標記「已完成」。</div>`:""}
+    <div class="field"><label for="aAs">負責人</label><input type="text" id="aAs" list="asList" maxlength="40" placeholder="例：總務處 李工友" value="${esc(c.assignee)}">
+      <datalist id="asList">${(S.settings.assignees||[]).map(a=>`<option value="${esc(a)}">`).join("")}</datalist></div>
+    <div class="field"><span class="flabel">處理狀態</span><div class="seg" id="aSeg">${Object.entries(STATUS).map(([k,t])=>`<button type="button" data-s="${k}" aria-pressed="${k===c.status}">${t}</button>`).join("")}</div></div>
+    <div class="field" id="aResW"><label for="aRes">實際處理結果<span class="req">*</span></label>
+      <textarea id="aRes" maxlength="1000" placeholder="例：已更換門把並測試正常。">${esc(c.result)}</textarea><div class="hint">標記「已完成」時必填，填報人與校長都會看到。</div></div>
+    <div class="field"><label for="aRep">回覆填報人（選填）</label><textarea id="aRep" maxlength="500" style="min-height:80px" placeholder="例：已收到，明天上午會派員處理。"></textarea></div>
+    <div class="banner err hidden" id="aErr"></div><button class="btn pri block big" id="aSave">儲存更新</button>`;
+  let s=c.status; const sync=()=>w.querySelector("#aResW").classList.toggle("hidden",s!=="done"); sync();
+  w.querySelector("#aSeg").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; s=b.dataset.s; w.querySelectorAll("#aSeg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===s)); sync(); };
+  w.querySelector("#aSave").onclick=async e=>{
+    const btn=e.currentTarget, er=w.querySelector("#aErr"); er.classList.add("hidden");
+    const d={assignee:w.querySelector("#aAs").value.trim(),status:s,result:w.querySelector("#aRes").value.trim(),reply:w.querySelector("#aRep").value.trim()};
+    if(s==="done"&&!d.result){ er.textContent="標記「已完成」時，請填寫實際處理結果。"; er.classList.remove("hidden"); w.querySelector("#aRes").classList.add("invalid"); return; }
+    busy(btn,"儲存中…");
+    try{ const r=await api("apiUpdate",S.token,c.id,d); toast(s==="done"?"已完成並送交校長核可":"已更新案件"); afterSave(r); }
+    catch(x){ if(!authFail(x)){ er.textContent=em(x); er.classList.remove("hidden"); } idle(btn); }
+  };
+  return w;
+}
+function auditForm(c){
+  const st=stOf(c), w=document.createElement("div"); w.className="card"; w.style.borderColor="#d9c8ef";
+  let h=`<div class="section-t">🏫 校長稽核</div>`;
+  if(!st.done){
+    h+=`<div style="color:var(--muted);font-size:14px">${st.returned?"已退回補正，待維修單位重新完成後可再審核。":"維修單位尚未完成此案件，完成後即可核可或退回。"}${st.overdue?`<br><b style="color:var(--red)">⏰ 已逾時 ${dur(st.age-(c.urgent?uH():nH())*3600000)}</b>`:""}</div>`;
+    w.innerHTML=h; return w;
+  }
+  h+=`${st.approved?`<div class="banner info">此案已核可。如發現問題，仍可退回補正。</div>`:""}
+    <div class="field"><label for="uNote">稽核意見（退回時必填）</label><textarea id="uNote" maxlength="500" style="min-height:80px" placeholder="例：請補充更換零件的品項與數量。"></textarea></div>
+    <div class="banner err hidden" id="uErr"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${st.approved?"<span></span>":`<button class="btn ok big" id="uOk">✔ 核可</button>`}<button class="btn warn big" id="uBack">↩ 退回補正</button></div>`;
+  w.innerHTML=h;
+  const go=async(state,btn)=>{
+    const note=w.querySelector("#uNote").value.trim(), er=w.querySelector("#uErr"); er.classList.add("hidden");
+    if(state==="returned"&&!note){ er.textContent="退回補正時，請填寫稽核意見。"; er.classList.remove("hidden"); w.querySelector("#uNote").classList.add("invalid"); return; }
+    busy(btn,"處理中…");
+    try{ const r=await api("apiAudit",S.token,c.id,state,note); toast(state==="approved"?"已核可處理結果":"已退回補正"); afterSave(r); }
+    catch(x){ if(!authFail(x)){ er.textContent=em(x); er.classList.remove("hidden"); } idle(btn); }
+  };
+  w.querySelector("#uOk")?.addEventListener("click",e=>go("approved",e.currentTarget));
+  w.querySelector("#uBack").addEventListener("click",e=>go("returned",e.currentTarget));
+  return w;
+}
+
+/* ---------- 管理 ---------- */
+async function renderSettings(){
+  const el=$("#setBody"); el.innerHTML=`<div class="loading">載入中…</div>`;
+  let st; try{ st=await api("apiAdminGet",S.token); }catch(x){ if(!authFail(x)) el.innerHTML=`<div class="banner err">${esc(em(x))}</div>`; return; }
+  const tag=ok=>ok?`<span class="badge b-done">已設定</span>`:`<span class="badge b-overdue">尚未設定</span>`;
+  el.innerHTML=`
+    <div class="card"><div class="section-t">🔑 登入密碼</div>
+      <div class="hint" style="margin-top:-6px;margin-bottom:10px">留白表示不變更。密碼至少 6 個字元，請另行告知相關同仁。</div>
+      <div class="field"><label for="sUnit">維修業務單位密碼 ${tag(st.pwSet.unit)}</label><input type="password" id="sUnit" autocomplete="new-password" placeholder="輸入新密碼"></div>
+      <div class="field"><label for="sPrin">校長密碼 ${tag(st.pwSet.principal)}</label><input type="password" id="sPrin" autocomplete="new-password" placeholder="輸入新密碼"></div>
+      <div class="field" style="margin-bottom:0"><label for="sAdm">變更管理者密碼</label><input type="password" id="sAdm" autocomplete="new-password" placeholder="輸入新密碼"></div></div>
+    <div class="card"><div class="section-t">⏰ 逾時標準</div><div class="row2">
+      <div class="field"><label for="sU">急件（小時）</label><input type="number" id="sU" min="1" max="720" value="${st.urgentHours}"></div>
+      <div class="field"><label for="sN">一般案件（小時）</label><input type="number" id="sN" min="1" max="2160" value="${st.normalHours}"></div></div></div>
+    <div class="card">
+      <div class="field"><label for="sA">校園區域選項（一行一個）</label><textarea id="sA" style="min-height:180px">${esc(st.areas.join("\n"))}</textarea></div>
+      <div class="field" style="margin-bottom:0"><label for="sP">常用負責人（一行一個）</label><textarea id="sP" placeholder="例：總務處 李工友">${esc(st.assignees.join("\n"))}</textarea></div></div>
+    <div class="banner err hidden" id="sErr"></div>
+    <button class="btn pri block big" id="sSave">儲存設定</button>`;
+  $("#sSave").onclick=async e=>{
+    const btn=e.currentTarget, er=$("#sErr"); er.classList.add("hidden");
+    const L=v=>v.split(/\n/).map(x=>x.trim()).filter(Boolean);
+    const pws=[$("#sUnit").value,$("#sPrin").value,$("#sAdm").value];
+    if(pws.some(p=>p&&p.length<6)){ er.textContent="密碼至少需 6 個字元"; er.classList.remove("hidden"); return; }
+    busy(btn,"儲存中…");
+    try{
+      await api("apiAdminSave",S.token,{unitPw:pws[0],principalPw:pws[1],adminPw:pws[2],urgentHours:$("#sU").value,normalHours:$("#sN").value,areas:L($("#sA").value),assignees:L($("#sP").value)});
+      toast("設定已儲存"); refresh(); renderSettings();
+    }catch(x){ if(!authFail(x)){ er.textContent=em(x); er.classList.remove("hidden"); } idle(btn); }
+  };
+}
+
+/* ---------- 啟動 ---------- */
+async function boot(){
+  resetForm(); show();
+  const tok=lsGet("rp_tok",null);
+  const [, s] = await Promise.all([refresh(), tok?api("apiCheck",tok).catch(()=>null):null]);
+  if(s){ S.token=tok; S.role=s.role; S.name=s.name; } else if(tok) lsDel("rp_tok");
+  if(!$("#fName").value) $("#fName").value=lsGet("rp_name","");
+  show();
+}
+boot();
+})();
+
+</script>
+</body>
+</html>
